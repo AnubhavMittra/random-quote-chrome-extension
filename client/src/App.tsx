@@ -1,33 +1,76 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
+import { Quote } from "./types/Quote";
+import { fetchRandomQuote } from "./utils/quotes";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [quote, setQuote] = useState<Quote>({
+    quotation: "",
+    author: "",
+    imageSize: { height: 3648, width: 5472 },
+    image: "",
+    liked: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleFetchRandomQuote = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      const {
+        quote: quotation,
+        author,
+        error,
+        image,
+      } = await fetchRandomQuote();
+
+      if (error) {
+        throw new Error(error);
+      }
+
+      setQuote((prevQuote: Quote) => ({
+        ...prevQuote,
+        quotation,
+        author,
+        image,
+      }));
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred.");
+      }
+    } finally {
+      setLoading(false);
+      console.log(quote);
+    }
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div
+        className="p-5 m-5 h-80 w-96 text-black rounded-md relative border border-red-900"
+        style={{
+          backgroundImage: `url(${quote.image})`,
+          backgroundSize: "100% 100%",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <p className="text-sm my-5">{quote.quotation}</p>
+        <p className="text-sm text-right">{quote.author}</p>
       </div>
-      <h1 className="text-3xl font-bold underline">Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+      <div className="flex justify-center items-center">
+        <button className=" px-3 py-2 w-24 rounded-tl-3xl rounded-br-3xl shadow border bg-white hover:text-gray-400    text-black  flex justify-center">
+          Today
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        <button
+          className=" px-3 py-2 w-24 rounded-tl-3xl rounded-br-3xl  shadow ml-5 border bg-white hover:text-gray-400   text-black flex justify-center"
+          onClick={handleFetchRandomQuote}
+        >
+          Random
+        </button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   );
 }
